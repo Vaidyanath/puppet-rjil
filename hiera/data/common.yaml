@@ -183,6 +183,7 @@ rjil::glance::backend: rbd
 
 ### Start: rbd backend specific settings
 rjil::glance::ceph_mon_key: "%{hiera('rjil::ceph::mon::key')}"
+glance::api::known_stores: ['rbd']
 rjil::glance::rbd_user: glance
 rjil::glance::admin_email: "%{hiera('admin_email')}"
 rjil::glance::server_name: "%{hiera('glance_public_address')}"
@@ -216,6 +217,7 @@ glance::api::registry_host: "localhost"
 glance::api::registry_port: "%{hiera('glance_registry_localbind_port')}"
 glance::api::registry_client_protocol: http
 
+glance::keystone::auth::service_description: 'Openstack Image Service'
 glance::api::auth_host: "%{hiera('keystone_public_address')}"
 glance::api::auth_protocol: "%{hiera('rjil::keystone::protocol')}"
 glance::api::auth_uri: "%{hiera('rjil::keystone::protocol')}://%{hiera('glance::api::auth_host')}:%{hiera('keystone_port')}/%{hiera('rjil::keystone::version')}"
@@ -249,8 +251,8 @@ neutron::server::mysql_module: 2.3
 neutron::rabbit_user: "%{hiera('rabbit_admin_user')}"
 neutron::rabbit_password: "%{hiera('rabbit_admin_pass')}"
 neutron::core_plugin: neutron_plugin_contrail.plugins.opencontrail.contrail_plugin.NeutronPluginContrailCoreV2
-neutron::service_plugins:
-  - neutron_plugin_contrail.plugins.opencontrail.loadbalancer.plugin.LoadBalancerPlugin
+# neutron::service_plugins:
+#  - neutron_plugin_contrail.plugins.opencontrail.loadbalancer.plugin.LoadBalancerPlugin
 neutron::quota::quota_driver: neutron_plugin_contrail.plugins.opencontrail.quota.driver.QuotaDriver
 neutron::plugins::ovs::tenant_network_type: vlan
 neutron::plugins::ovs::network_vlan_ranges: ctlplane
@@ -379,7 +381,7 @@ nova::quota::quota_cores: -1
 nova::quota::quota_ram: -1
 nova::quota::quota_volumes: 120
 nova::quota::quota_floating_ips: 10
-
+cinder::quota::quota_volumes: 10
 
 #TODO Multiple consoleauth need memcache server to keep tokens.
 nova::consoleauth::enabled: true
@@ -405,6 +407,7 @@ rjil::nova::controller::nova_auth:
   username: nova
   password: "%{hiera('nova::keystone::auth::password')}"
   tenant_name: services
+  project_name: services
   auth_url: "%{hiera('rjil::keystone::protocol')}://%{hiera('nova::api::auth_host')}:%{hiera('keystone_port')}/%{hiera('rjil::keystone::version')}"
 
 rjil::nova::controller::flavors:
@@ -501,6 +504,11 @@ rjil::keystone::cache_enabled: true
 rjil::keystone::cache_backend: dogpile.cache.memcached
 rjil::keystone::cache_backend_argument: url:127.0.0.1:11211
 
+# enable keystone caching with memcache.pool
+keystone::memcache_servers: ['127.0.0.1:11211']
+keystone::cache_backend: keystone.cache.memcache_pool
+keystone::debug_cache_backend: "%{hiera('debug')}"
+
 rjil::openstack_objects::identity_address: "%{hiera('keystone_public_address')}"
 
 cinder::keystone::auth::password: cinder
@@ -592,6 +600,45 @@ rustedhalo_apt_repo_release: 'trusty'
 
 rjil::system::apt::enable_puppetlabs: true
 rjil::system::apt::repositories:
+
+  ceph:
+    location: 'http://ceph.com/debian-hammer'
+    release: 'trusty'
+    repos: 'main'
+    include_src: false
+    key: '17ED316D'
+    key_content: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v1.4.11 (GNU/Linux)
+
+
+      mQINBFX4hgkBEADLqn6O+UFp+ZuwccNldwvh5PzEwKUPlXKPLjQfXlQRig1flpCH
+      E0HJ5wgGlCtYd3Ol9f9+qU24kDNzfbs5bud58BeE7zFaZ4s0JMOMuVm7p8JhsvkU
+      C/Lo/7NFh25e4kgJpjvnwua7c2YrA44ggRb1QT19ueOZLK5wCQ1mR+0GdrcHRCLr
+      7Sdw1d7aLxMT+5nvqfzsmbDullsWOD6RnMdcqhOxZZvpay8OeuK+yb8FVQ4sOIzB
+      FiNi5cNOFFHg+8dZQoDrK3BpwNxYdGHsYIwU9u6DWWqXybBnB9jd2pve9PlzQUbO
+      eHEa4Z+jPqxY829f4ldaql7ig8e6BaInTfs2wPnHJ+606g2UH86QUmrVAjVzlLCm
+      nqoGymoAPGA4ObHu9X3kO8viMBId9FzooVqR8a9En7ZE0Dm9O7puzXR7A1f5sHoz
+      JdYHnr32I+B8iOixhDUtxIY4GA8biGATNaPd8XR2Ca1hPuZRVuIiGG9HDqUEtXhV
+      fY5qjTjaThIVKtYgEkWMT+Wet3DPPiWT3ftNOE907e6EWEBCHgsEuuZnAbku1GgD
+      LBH4/a/yo9bNvGZKRaTUM/1TXhM5XgVKjd07B4cChgKypAVHvef3HKfCG2U/DkyA
+      LjteHt/V807MtSlQyYaXUTGtDCrQPSlMK5TjmqUnDwy6Qdq8dtWN3DtBWQARAQAB
+      tCpDZXBoLmNvbSAocmVsZWFzZSBrZXkpIDxzZWN1cml0eUBjZXBoLmNvbT6JAjgE
+      EwECACIFAlX4hgkCGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAAoJEOhKwsBG
+      DzmUXdIQAI8YPcZMBWdv489q8CzxlfRIRZ3Gv/G/8CH+EOExcmkVZ89mVHngCdAP
+      DOYCl8twWXC1lwJuLDBtkUOHXNuR5+Jcl5zFOUyldq1Hv8u03vjnGT7lLJkJoqpG
+      l9QD8nBqRvBU7EM+CU7kP8+09b+088pULil+8x46PwgXkvOQwfVKSOr740Q4J4nm
+      /nUOyTNtToYntmt2fAVWDTIuyPpAqA6jcqSOC7Xoz9cYxkVWnYMLBUySXmSS0uxl
+      3p+wK0lMG0my/gb+alke5PAQjcE5dtXYzCn+8Lj0uSfCk8Gy0ZOK2oiUjaCGYN6D
+      u72qDRFBnR3jaoFqi03bGBIMnglGuAPyBZiI7LJgzuT9xumjKTJW3kN4YJxMNYu1
+      FzmIyFZpyvZ7930vB2UpCOiIaRdZiX4Z6ZN2frD3a/vBxBNqiNh/BO+Dex+PDfI4
+      TqwF8zlcjt4XZ2teQ8nNMR/D8oiYTUW8hwR4laEmDy7ASxe0p5aijmUApWq5UTsF
+      +s/QbwugccU0iR5orksM5u9MZH4J/mFGKzOltfGXNLYI6D5Mtwrnyi0BsF5eY0u6
+      vkdivtdqrq2DXY+ftuqLOQ7b+t1RctbcMHGPptlxFuN9ufP5TiTWSpfqDwmHCLsT
+      k2vFiMwcHdLpQ1IH8ORVRgPPsiBnBOJ/kIiXG2SxPUTjjEGOVgeA
+      =/Tod
+      -----END PGP PUBLIC KEY BLOCK-----
+
   rustedhalo:
     location: 'http://jiocloud.rustedhalo.com/ubuntu/'
     release: "%{hiera('rustedhalo_apt_repo_release')}"
@@ -645,6 +692,73 @@ rjil::system::apt::repositories:
     repos: 'main restricted universe multiverse'
     include_src: false
 
+  ubuntu_kilo:
+    location: http://ubuntu-cloud.archive.canonical.com/ubuntu
+    release: trusty-updates/kilo
+    repos: main
+    include_src: false
+    key: 'EC4926EA'
+    key_content: |
+      -----BEGIN PGP PUBLIC KEY BLOCK-----
+      Version: GnuPG v1
+ 
+      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
+      Oa4g9309p/+af/HU1smBrOfIeRoxb8jQoHu3
+      =xg4S
+      -----END PGP PUBLIC KEY BLOCK-----
+
+  contrailv2:
+    location: 'http://jiocloud.rustedhalo.com/contrailv2'
+    release: 'trusty'
+    pin: '400'
+    repos: 'main'
+    include_src: false
+ 
 
 
 ########################################

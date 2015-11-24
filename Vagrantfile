@@ -77,8 +77,8 @@ Vagrant.configure("2") do |config|
       end
 
       config.vm.provision 'shell', :inline =>
-      "echo env=#{environment} > /etc/facter/facts.d/env.txt"
-
+      "echo env=#{environment} > /etc/facter/facts.d/env.txt;echo layout=#{layout} > /etc/facter/facts.d/layout.txt;"
+ 
       if ENV['http_proxy']
         config.vm.provision 'shell', :inline =>
         "echo \"Acquire::http { Proxy \\\"#{ENV['http_proxy']}\\\" }\" > /etc/apt/apt.conf.d/03proxy"

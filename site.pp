@@ -85,6 +85,16 @@ node /^ct\d+/ {
   include rjil::haproxy::contrail
   include rjil::contrail::server
   include rjil::neutron::contrail
+  apt::pin { 'nodejs':
+    packages => 'nodejs',
+    version  => '0.8.15-1contrail1',
+    priority => '1000',
+  }
+  file_line { 'java_security_hack':
+    ensure => absent,
+    line => 'jdk.tls.disabledAlgorithms=SSLv3',
+    path => '/etc/java-7-openjdk/security/java.security',
+  } -> Service<| title == 'ifmap-server' |>
 }
 
 ##
@@ -97,6 +107,7 @@ node /^oc\d+/ {
   include rjil::memcached
   include rjil::keystone
   include openstack_extras::client
+  include openstacklib::openstackclient
   include rjil::cinder
   include rjil::glance
   include rjil::openstack_zeromq
@@ -111,6 +122,7 @@ node /^ocdb\d+/ {
   include rjil::base
   include rjil::memcached
   include openstack_extras::client
+  include openstacklib::openstackclient
   include rjil::db
   include rjil::keystone
   include rjil::cinder
@@ -118,6 +130,9 @@ node /^ocdb\d+/ {
   include rjil::nova::controller
   include rjil::openstack_zeromq
   include rjil::openstack_objects
+  Exec <| title == 'keystone-manage db_sync' |> {
+    logoutput => true
+  }
 }
 
 #
@@ -127,6 +142,7 @@ node /^ocdb\d+/ {
 node /^oclb\d+/ {
   include rjil::base
   include openstack_extras::client
+  include openstacklib::openstackclient
   include rjil::memcached
   include rjil::db
   include rjil::keystone
@@ -138,6 +154,19 @@ node /^oclb\d+/ {
   include rjil::haproxy
   include rjil::haproxy::openstack
 }
+
+#
+# just keystone and a db
+#
+node /^keystonedb\d+/ {
+  include rjil::base
+  include rjil::memcached
+  include openstacklib::openstackclient
+  include rjil::db
+  include rjil::keystone
+  include rjil::openstack_objects
+}
+
 
 ##
 # compute nodes
@@ -151,6 +180,7 @@ node /^gcp\d+/ {
   include rjil::base
   include rjil::ceph
   include openstack_extras::client
+  include openstacklib::openstackclient
   include rjil::contrail::vrouter
   include rjil::openstack_zeromq
   include rjil::nova::compute
@@ -162,6 +192,7 @@ node /^cp\d+/ {
   include rjil::base
   include rjil::ceph
   include openstack_extras::client
+  include openstacklib::openstackclient
   include rjil::contrail::vrouter
   include rjil::openstack_zeromq
   include rjil::nova::compute
