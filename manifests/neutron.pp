@@ -84,11 +84,11 @@ class rjil::neutron (
   # These are required for contrail configuration.
   ##
 
-  if $api_extensions_path {
-    neutron_config {'DEFAULT/api_extensions_path':
-      value => $api_extensions_path,
-    }
-  }
+#  if $api_extensions_path {
+#    neutron_config {'DEFAULT/api_extensions_path':
+#      value => $api_extensions_path,
+#    }
+#  }
 
   if $service_provider {
     neutron_config { 'service_providers/service_provider':

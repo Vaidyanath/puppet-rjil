@@ -50,7 +50,7 @@ resources:
     networks: default
     boot_volume: default_volume
   cp:
-    number: 2
+    number: 0
     flavor: large
     image: trusty
     networks: default

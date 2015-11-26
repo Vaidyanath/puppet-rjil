@@ -121,11 +121,6 @@ rjil::neutron::contrail::fip_pools:
 
 contrail::vrouter::vgw_subnets: ['100.1.0.0/24']
 rjil::system::apt::env_repositories:
-  contrailv2:
-    location: 'http://jiocloud.rustedhalo.com/contrailv2'
-    release: 'trusty'
-    repos: 'main'
-    include_src: false
 
 ntp::servers:
   - 10.140.221.235

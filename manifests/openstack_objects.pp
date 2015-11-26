@@ -81,7 +81,7 @@ class rjil::openstack_objects(
   include rjil::tempest::provision
 
   # create users, tenants, roles, default networks
-  create_resources('rjil::keystone::user',$users)
+  #create_resources('rjil::keystone::user',$users)
 
   ##
   # Tenants can be created without creating users, $tenants can be an array of
@@ -125,3 +125,5 @@ class rjil::openstack_objects(
     create_resources('keystone_role',$roles,{ensure =>present})
   }
 }
+}
+
